@@ -1,906 +1,579 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Distribution Visualizer -- Normal and Binomial</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Xavier Brown | Constellation Artefact</title>
   <style>
-    :root{
-      --bg:#0f1220;
-      --panel:#171a2b;
-      --panel2:#111427;
-      --text:#e8ecff;
-      --muted:#aab2d8;
-      --grid:rgba(255,255,255,.10);
-      --axis:rgba(255,255,255,.45);
-      --curve:#7ad7ff;
-      --shade:rgba(122,215,255,.25);
-      --bar:#9aa7ff;
-      --barHi:#ffd36b;
-      --accent:#7cffb2;
-      --danger:#ff7a7a;
-      --shadow: 0 10px 35px rgba(0,0,0,.35);
-      --radius:14px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:var(--sans);
-      background: radial-gradient(1200px 700px at 20% 10%, rgba(122,215,255,.18), transparent 50%),
-                  radial-gradient(900px 600px at 85% 35%, rgba(255,211,107,.12), transparent 55%),
-                  radial-gradient(900px 650px at 55% 95%, rgba(124,255,178,.10), transparent 55%),
-                  var(--bg);
-      color:var(--text);
-    }
-    .wrap{
-      max-width:1100px;
-      margin:24px auto;
-      padding:0 16px 24px;
-    }
-    header{
-      display:flex;
-      gap:12px;
-      align-items:flex-end;
-      justify-content:space-between;
-      margin-bottom:14px;
-    }
-    header h1{
-      font-size:20px;
-      letter-spacing:.2px;
-      margin:0;
-      font-weight:750;
-    }
-    header .sub{
-      color:var(--muted);
-      font-size:13px;
-      margin-top:4px;
-    }
-    .grid{
-      display:grid;
-      grid-template-columns: 360px 1fr;
-      gap:14px;
-      align-items:start;
-    }
-    .card{
-      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border:1px solid rgba(255,255,255,.08);
-      box-shadow:var(--shadow);
-      border-radius:var(--radius);
-      overflow:hidden;
-    }
-    .card .hd{
-      padding:12px 14px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      background:rgba(0,0,0,.18);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-    .card .hd .ttl{
-      font-weight:700;
-      font-size:14px;
-      letter-spacing:.2px;
-      color:var(--text);
-    }
-    .card .bd{
-      padding:12px 14px 14px;
+    :root {
+      --gold: #e4c17e;
+      --parchment: #f4e7d1;
+      --mist: #d2dfdb;
+      --shadow: 0 28px 70px rgba(0, 0, 0, 0.45);
     }
 
-    .row{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:space-between;
-      margin:10px 0;
-    }
-    label{
-      font-size:13px;
-      color:var(--muted);
-      user-select:none;
-    }
-    select, input[type="range"], button{
-      font-family:inherit;
-    }
-    select{
-      width:180px;
-      padding:8px 10px;
-      border-radius:10px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.22);
-      color:var(--text);
-      outline:none;
-    }
-    .slider{
-      display:grid;
-      grid-template-columns: 1fr 70px;
-      gap:10px;
-      align-items:center;
-      width:100%;
-    }
-    input[type="range"]{
-      width:100%;
-      accent-color: var(--accent);
-    }
-    .val{
-      text-align:right;
-      font-family:var(--mono);
-      font-size:12.5px;
-      color:var(--text);
-      padding:6px 8px;
-      border-radius:10px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(0,0,0,.18);
-      white-space:nowrap;
-    }
-    .btns{
-      display:flex;
-      gap:10px;
-      margin-top:12px;
-    }
-    button{
-      flex:1;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.24);
-      color:var(--text);
-      cursor:pointer;
-      font-weight:650;
-      letter-spacing:.2px;
-      transition: transform .06s ease, background .15s ease, border-color .15s ease;
-    }
-    button:hover{ background:rgba(0,0,0,.32); border-color:rgba(255,255,255,.18); }
-    button:active{ transform: translateY(1px); }
-    button.primary{
-      background: linear-gradient(180deg, rgba(124,255,178,.22), rgba(124,255,178,.10));
-      border-color: rgba(124,255,178,.35);
-    }
-    button.primary:hover{
-      background: linear-gradient(180deg, rgba(124,255,178,.28), rgba(124,255,178,.12));
-      border-color: rgba(124,255,178,.45);
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      color: var(--parchment);
+      font-family: "Trebuchet MS", "Gill Sans", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(116, 208, 194, 0.16), transparent 30%),
+        radial-gradient(circle at 85% 15%, rgba(228, 193, 126, 0.15), transparent 24%),
+        radial-gradient(circle at left bottom, rgba(74, 23, 28, 0.45), transparent 34%),
+        linear-gradient(160deg, #040609 0%, #0a1018 42%, #180f13 100%);
     }
 
-    .pill{
-      font-family:var(--mono);
-      font-size:12px;
-      color:var(--muted);
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(0,0,0,.18);
-      white-space:nowrap;
+    body::before, body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
     }
 
-    .plotWrap{
-      padding:12px 14px 14px;
-    }
-    canvas{
-      width:100%;
-      height:520px;
-      display:block;
-      background:rgba(0,0,0,.16);
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:var(--radius);
+    body::before {
+      background:
+        linear-gradient(rgba(116, 208, 194, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(116, 208, 194, 0.05) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: linear-gradient(to bottom, transparent, rgba(0,0,0,0.85), transparent);
     }
 
-    .panelText{
-      background:rgba(0,0,0,.16);
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:var(--radius);
-      padding:12px 12px;
-      margin-top:12px;
-    }
-    .panelText h3{
-      margin:0 0 6px;
-      font-size:13px;
-      font-weight:800;
-      letter-spacing:.2px;
-      color:var(--text);
-    }
-    .panelText p{
-      margin:0;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.45;
-    }
-    .mono{
-      font-family:var(--mono);
-      color:var(--text);
+    body::after {
+      background:
+        radial-gradient(circle at center, rgba(228, 193, 126, 0.08), transparent 30%),
+        repeating-linear-gradient(135deg, transparent 0 18px, rgba(228, 193, 126, 0.03) 18px 19px);
+      mix-blend-mode: screen;
+      opacity: 0.7;
     }
 
-    .hidden{ display:none !important; }
+    img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    button { border: 0; font: inherit; color: inherit; }
 
-    .note{
-      margin-top:10px;
-      font-size:12px;
-      color:rgba(170,178,216,.9);
-      line-height:1.4;
-    }
-    .warn{
-      color: var(--danger);
-      font-family: var(--mono);
-      font-size: 12px;
-      margin-top: 8px;
-      display:none;
+    /* ── stage & panel ───────────────────────────────── */
+
+    .stage {
+      position: relative;
+      z-index: 1;
+      height: 100dvh;
+      padding: clamp(0.35rem, 1vw, 1rem);
     }
 
-    @media (max-width: 980px){
-      .grid{ grid-template-columns: 1fr; }
-      canvas{ height:460px; }
-      select{ width: 100%; }
-      header{ align-items:flex-start; flex-direction:column; }
+    .constellation {
+      position: relative;
+      height: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      overflow: hidden;
+      border-radius: clamp(24px, 4vw, 38px);
+      border: 1px solid rgba(228, 193, 126, 0.18);
+      background:
+        radial-gradient(circle at center, rgba(116, 208, 194, 0.08), transparent 20%),
+        radial-gradient(circle at center, rgba(228, 193, 126, 0.05), transparent 36%),
+        linear-gradient(180deg, rgba(12, 18, 27, 0.94), rgba(7, 11, 17, 0.96));
+      box-shadow: var(--shadow);
+      isolation: isolate;
+    }
+
+    .constellation::before {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      border-radius: inherit;
+      border: 1px solid rgba(116, 208, 194, 0.08);
+      pointer-events: none;
+    }
+
+    /* ── top header ──────────────────────────────────── */
+
+    .top-header {
+      position: absolute;
+      top: clamp(0.8rem, 2vw, 1.2rem);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      z-index: 6;
+      white-space: nowrap;
+    }
+
+    .hud {
+      margin: 0;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-size: 0.66rem;
+      color: var(--gold);
+      padding: 0.45rem 0.8rem;
+      border-radius: 999px;
+      border: 1px solid rgba(228, 193, 126, 0.14);
+      background: rgba(8, 12, 18, 0.6);
+      backdrop-filter: blur(10px);
+    }
+
+    .core-copy {
+      text-align: center;
+      padding: 0.45rem 0.8rem 0.5rem;
+      border-radius: 14px;
+      border: 1px solid rgba(228, 193, 126, 0.12);
+      background: rgba(8, 12, 18, 0.52);
+      backdrop-filter: blur(10px);
+    }
+
+    .core-name {
+      margin: 0;
+      font-family: Georgia, "Palatino Linotype", "Book Antiqua", serif;
+      font-size: clamp(0.95rem, 1.6vw, 1.3rem);
+      letter-spacing: 0.04em;
+      color: #fff3d9;
+      text-shadow: 0 0 16px rgba(228, 193, 126, 0.18);
+    }
+
+    .meta-strip {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.25rem;
+      margin-top: 0.3rem;
+    }
+
+    .meta-strip span {
+      padding: 0.22rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid rgba(228, 193, 126, 0.16);
+      background: linear-gradient(180deg, rgba(20, 28, 38, 0.88), rgba(10, 14, 21, 0.92));
+      font-size: 0.66rem;
+      color: var(--parchment);
+    }
+
+    /* ── central orb ─────────────────────────────────── */
+
+    .core {
+      position: absolute;
+      left: 50%;
+      top: 46%;
+      transform: translate(-50%, -50%);
+      z-index: 4;
+    }
+
+    .core-orb {
+      position: relative;
+      width: min(36vw, 400px);
+      aspect-ratio: 1;
+      padding: 0.65rem;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 1px solid rgba(228, 193, 126, 0.18);
+      background:
+        radial-gradient(circle at 28% 24%, rgba(255,255,255,0.34), transparent 24%),
+        radial-gradient(circle at 66% 76%, rgba(74, 23, 28, 0.22), transparent 34%),
+        linear-gradient(145deg, rgba(228,193,126,0.58), rgba(116,208,194,0.28) 42%, rgba(12,18,27,0.96) 74%);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.1),
+        0 24px 40px rgba(0,0,0,0.46),
+        inset 0 1px 18px rgba(255,255,255,0.18);
+    }
+
+    .core-orb img { border-radius: 50%; }
+
+    /* ── bottom node strip ───────────────────────────── */
+
+    .node-strip {
+      position: absolute;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      width: min(94vw, 1100px);
+      z-index: 5;
+    }
+
+    .signal-node {
+      min-width: clamp(88px, 8vw, 124px);
+      padding: 0.58rem 0.6rem 0.56rem;
+      border-radius: 999px;
+      border: 1px solid rgba(228, 193, 126, 0.16);
+      background: linear-gradient(180deg, rgba(24, 33, 43, 0.96), rgba(9, 13, 19, 0.96));
+      text-align: center;
+      cursor: pointer;
+      box-shadow:
+        0 8px 20px rgba(0,0,0,0.28),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+      transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease, background 200ms ease;
+    }
+
+    .signal-node strong {
+      display: block;
+      font-size: 0.82rem;
+      color: #fff4dd;
+    }
+
+    .signal-node span {
+      display: block;
+      margin-top: 0.1rem;
+      font-size: 0.58rem;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: rgba(244, 231, 209, 0.7);
+    }
+
+    .signal-node:hover,
+    .signal-node:focus-visible {
+      outline: none;
+      transform: scale(1.05);
+      border-color: rgba(228, 193, 126, 0.6);
+      background: linear-gradient(180deg, rgba(36, 49, 61, 0.98), rgba(10, 15, 23, 0.96));
+      box-shadow:
+        0 14px 28px rgba(0,0,0,0.38),
+        0 0 0 1px rgba(116, 208, 194, 0.2),
+        0 0 22px rgba(228, 193, 126, 0.12);
+    }
+
+    /* ── photo strips ────────────────────────────────── */
+
+    .photos-left,
+    .photos-right {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      z-index: 3;
+      width: clamp(160px, 19vw, 260px);
+    }
+
+    .photos-left  { right: calc(50% + min(18vw, 200px) + 1.2rem); }
+    .photos-right { left:  calc(50% + min(18vw, 200px) + 1.2rem); }
+
+    /* ── individual photos ───────────────────────────── */
+
+    .photo-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(228, 193, 126, 0.18);
+      background:
+        linear-gradient(135deg, rgba(116, 208, 194, 0.1), rgba(14, 20, 29, 0.96)),
+        rgba(5, 8, 13, 0.94);
+      box-shadow: 0 16px 32px rgba(0,0,0,0.35);
+    }
+
+    .photo.book      .photo-frame { aspect-ratio: 5 / 4; }
+    .photo.landscape .photo-frame { aspect-ratio: 16 / 9; }
+
+    .photo-label {
+      padding: 0.38rem 0.46rem;
+      border-radius: 12px;
+      background: rgba(8, 12, 18, 0.78);
+      border: 1px solid rgba(228, 193, 126, 0.1);
+      backdrop-filter: blur(10px);
+      text-align: center;
+    }
+
+    .photo-label strong {
+      display: -webkit-box;
+      font-size: 0.68rem;
+      line-height: 1.2;
+      color: #fff4dd;
+      line-clamp: 2;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .photo-label span {
+      display: block;
+      margin-top: 0.1rem;
+      font-size: 0.52rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(244, 231, 209, 0.65);
+    }
+
+    /* ── missing overlay ─────────────────────────────── */
+
+    .media-frame.missing img { opacity: 0; }
+
+    .missing-overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 0.6rem;
+      text-align: center;
+      background:
+        radial-gradient(circle at top, rgba(228, 193, 126, 0.12), transparent 34%),
+        linear-gradient(180deg, rgba(14, 21, 30, 0.84), rgba(7, 11, 17, 0.92));
+      border: 1px dashed rgba(228, 193, 126, 0.26);
+      color: var(--mist);
+    }
+
+    .media-frame:not(.missing) .missing-overlay { opacity: 0; pointer-events: none; }
+    .core-orb .missing-overlay { border-radius: 50%; }
+
+    .slot-kicker {
+      margin: 0;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-size: 0.58rem;
+      color: var(--gold);
+    }
+
+    .missing-overlay strong, .missing-overlay small { display: block; }
+
+    .missing-overlay strong {
+      margin: 0.25rem 0 0.15rem;
+      color: #fff3db;
+      font-size: 0.76rem;
+    }
+
+    .missing-overlay small {
+      font-size: 0.6rem;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    /* ── photo-columns: transparent wrapper on desktop ── */
+
+    .photo-columns { display: contents; }
+
+    /* ── desktop responsive ──────────────────────────── */
+
+    @media (max-width: 1100px) {
+      .core-orb { width: min(38vw, 340px); }
+      .photos-left, .photos-right { width: clamp(130px, 16vw, 210px); }
+    }
+
+    @media (max-width: 800px) {
+      .core-orb { width: min(44vw, 240px); }
+      .photos-left, .photos-right { width: clamp(100px, 18vw, 160px); gap: 0.5rem; }
+      .signal-node { min-width: clamp(76px, 13vw, 108px); }
+      .signal-node strong { font-size: 0.72rem; }
+      .signal-node span { font-size: 0.5rem; }
+    }
+
+    /* ── mobile layout (≤ 720px) ─────────────────────── */
+
+    @media (max-width: 720px) {
+      html, body { height: auto; overflow-y: auto; }
+
+      .stage { height: auto; min-height: 100dvh; padding: 0.5rem; }
+
+      .constellation {
+        height: auto;
+        overflow: visible;
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 1.2rem 0.9rem 1.4rem;
+        gap: 1.2rem;
+      }
+
+      /* header: static, wrappable */
+      .top-header {
+        position: static;
+        transform: none;
+        white-space: normal;
+        width: 100%;
+        align-items: center;
+      }
+
+      .hud { white-space: normal; text-align: center; }
+
+      /* orb: static, centred */
+      .core {
+        position: static;
+        transform: none;
+        display: flex;
+        justify-content: center;
+      }
+
+      .core-orb { width: min(68vw, 280px); }
+
+      /* photos: two columns side by side */
+      .photo-columns {
+        display: flex;
+        gap: 0.7rem;
+        width: 100%;
+      }
+
+      .photos-left,
+      .photos-right {
+        position: static;
+        transform: none;
+        width: 50%;
+        flex-shrink: 1;
+        min-width: 0;
+        gap: 0.7rem;
+      }
+
+      /* nodes: static, centred wrap */
+      .node-strip {
+        position: static;
+        transform: none;
+        width: 100%;
+        gap: 0.4rem;
+      }
+
+      .signal-node {
+        min-width: clamp(80px, 28vw, 140px);
+        padding: 0.56rem 0.5rem;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div>
-        <h1>Distribution Visualizer -- Normal and Binomial</h1>
-        <div class="sub">Offline, single-file interactive applet for exploring distribution shapes and exact probabilities (via numerical integration / exact summation).</div>
+  <main class="stage">
+    <section class="constellation">
+
+      <!-- top header -->
+      <div class="top-header">
+        <p class="hud">HON 407 AI Artefact / constellation</p>
+        <div class="core-copy">
+          <p class="core-name">Xavier Brown</p>
+          <div class="meta-strip">
+            <span>He/They</span>
+            <span>Portland, Oregon</span>
+            <span>Psychology</span>
+          </div>
+        </div>
       </div>
-      <div class="pill" id="statusPill">Ready</div>
-    </header>
 
-    <div class="grid">
-      <section class="card">
-        <div class="hd">
-          <div class="ttl">Controls</div>
-          <div class="pill" id="modePill">Mode: Normal</div>
-        </div>
-        <div class="bd">
-          <div class="row">
-            <label for="modeSel">Mode</label>
-            <select id="modeSel">
-              <option value="normal">Normal</option>
-              <option value="binomial">Binomial</option>
-            </select>
+      <!-- central orb -->
+      <div class="core">
+        <figure class="core-orb media-frame missing">
+          <img src="images/xavier-psu-ina-presentation.jpeg" alt="Xavier Brown presenting at the Interdisciplinary Neuroscience Association at PSU.">
+          <div class="missing-overlay">
+            <div>
+              <p class="slot-kicker">Central orb</p>
+              <strong>PSU presentation photo</strong>
+              <small>images/xavier-psu-ina-presentation.jpeg</small>
+            </div>
           </div>
+        </figure>
+      </div>
 
-          <!-- Normal controls -->
-          <div id="normalControls">
-            <div class="row">
-              <label>μ (mean)</label>
-              <div class="slider">
-                <input id="mu" type="range" min="-5" max="5" step="0.1" value="0" />
-                <div class="val" id="muVal">0.0</div>
-              </div>
-            </div>
-            <div class="row">
-              <label>σ (std dev)</label>
-              <div class="slider">
-                <input id="sigma" type="range" min="0.5" max="5" step="0.1" value="1" />
-                <div class="val" id="sigmaVal">1.0</div>
-              </div>
-            </div>
-            <div class="row">
-              <label>a (lower bound)</label>
-              <div class="slider">
-                <input id="a" type="range" min="-10" max="10" step="0.1" value="-1" />
-                <div class="val" id="aVal">-1.0</div>
-              </div>
-            </div>
-            <div class="row">
-              <label>b (upper bound)</label>
-              <div class="slider">
-                <input id="b" type="range" min="-10" max="10" step="0.1" value="1" />
-                <div class="val" id="bVal">1.0</div>
+      <!-- photo columns wrapper (flex row on mobile, transparent on desktop) -->
+      <div class="photo-columns">
+
+      <!-- left photo strip -->
+      <div class="photos-left">
+        <figure class="photo">
+          <div class="photo-frame media-frame missing">
+            <img src="images/xavier-sfn-northwest-noggin-san-diego.png" alt="Xavier Brown with Northwest Noggin at SfN in San Diego.">
+            <div class="missing-overlay">
+              <div>
+                <p class="slot-kicker">Photo</p>
+                <strong>Northwest Noggin</strong>
+                <small>xavier-sfn-northwest-noggin-san-diego.png</small>
               </div>
             </div>
           </div>
+          <div class="photo-label"><strong>Northwest Noggin</strong><span>SfN / San Diego</span></div>
+        </figure>
 
-          <!-- Binomial controls -->
-          <div id="binomialControls" class="hidden">
-            <div class="row">
-              <label>n (trials)</label>
-              <div class="slider">
-                <input id="n" type="range" min="1" max="100" step="1" value="20" />
-                <div class="val" id="nVal">20</div>
+        <figure class="photo">
+          <div class="photo-frame media-frame missing">
+            <img src="images/xavier-painting.png" alt="One of Xavier Brown's paintings.">
+            <div class="missing-overlay">
+              <div>
+                <p class="slot-kicker">Photo</p>
+                <strong>Painting</strong>
+                <small>xavier-painting.png</small>
               </div>
             </div>
-            <div class="row">
-              <label>p (success prob)</label>
-              <div class="slider">
-                <input id="p" type="range" min="0" max="1" step="0.01" value="0.5" />
-                <div class="val" id="pVal">0.50</div>
+          </div>
+          <div class="photo-label"><strong>Dialectical Behaviorism In The Latent Space</strong><span>2023</span></div>
+        </figure>
+
+      </div>
+
+      <!-- right photo strip -->
+      <div class="photos-right">
+        <figure class="photo">
+          <div class="photo-frame media-frame missing">
+            <img src="images/giordano-bruno.jpg" alt="Portrait representing Giordano Bruno.">
+            <div class="missing-overlay">
+              <div>
+                <p class="slot-kicker">Photo</p>
+                <strong>Giordano Bruno</strong>
+                <small>giordano-bruno.jpg</small>
               </div>
             </div>
-            <div class="row">
-              <label>k (cutoff)</label>
-              <div class="slider">
-                <input id="k" type="range" min="0" max="100" step="1" value="10" />
-                <div class="val" id="kVal">10</div>
+          </div>
+          <div class="photo-label"><strong>The monument to Bruno, Campo de' Fiori, Rome</strong><span>Wikipedia</span></div>
+        </figure>
+
+        <figure class="photo landscape">
+          <div class="photo-frame media-frame missing">
+            <img src="images/uo-human-biomechanics-lab.jpeg" alt="University of Oregon Human Biomechanics Lab.">
+            <div class="missing-overlay">
+              <div>
+                <p class="slot-kicker">Photo</p>
+                <strong>UO Biomechanics Lab</strong>
+                <small>uo-human-biomechanics-lab.jpeg</small>
               </div>
             </div>
-            <div class="note">If k &gt; n, k is clamped to n automatically.</div>
           </div>
-
-          <div class="btns">
-            <button class="primary" id="updateBtn">Update Plot</button>
-            <button id="resetBtn">Reset</button>
-          </div>
-
-          <div class="warn" id="warnText"></div>
-        </div>
-      </section>
-
-      <section class="card">
-        <div class="hd">
-          <div class="ttl" id="plotTitle">Normal Distribution (mu=0.0, sigma=1.0)</div>
-          <div class="pill" id="probPill">P = 0.000000</div>
-        </div>
-        <div class="plotWrap">
-          <canvas id="cv" width="900" height="520"></canvas>
-
-          <div class="panelText" id="numbersPanel">
-            <h3>Numbers</h3>
-            <p id="numbersText"></p>
-          </div>
-
-          <div class="panelText" id="interpPanel">
-            <h3>Interpretation</h3>
-            <p id="interpText"></p>
-          </div>
-        </div>
-      </section>
-    </div>
-  </div>
-
-<script>
-(() => {
-  "use strict";
-
-  // ---------- Utilities ----------
-  const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
-  const fmt = (x, d=1) => Number.isFinite(x) ? x.toFixed(d) : "NaN";
-  const fmt6 = (x) => Number.isFinite(x) ? x.toFixed(6) : "NaN";
-
-  function setStatus(msg){
-    document.getElementById("statusPill").textContent = msg;
-  }
-  function warn(msg){
-    const el = document.getElementById("warnText");
-    if(msg){
-      el.style.display = "block";
-      el.textContent = msg;
-    } else {
-      el.style.display = "none";
-      el.textContent = "";
-    }
-  }
-
-  // ---------- Math: Normal PDF ----------
-  function normalPdf(x, mu, sigma){
-    // f(x) = (1/(sigma*sqrt(2*pi))) * exp(-0.5*((x-mu)/sigma)^2)
-    const z = (x - mu) / sigma;
-    return (1 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * z * z);
-  }
-
-  // Numerical integration via Simpson's rule (even number of subintervals).
-  // If a > b, swap.
-  function simpsonIntegrate(f, a, b, steps){
-    if(!Number.isFinite(a) || !Number.isFinite(b)) return NaN;
-    if(a === b) return 0;
-    let left = a, right = b;
-    if(left > right){ const t = left; left = right; right = t; }
-    // Ensure steps is even and >= 2
-    let n = Math.max(2, Math.floor(steps));
-    if(n % 2 === 1) n += 1;
-    const h = (right - left) / n;
-    let sum = f(left) + f(right);
-    for(let i=1; i<n; i++){
-      const x = left + i*h;
-      sum += (i % 2 === 0 ? 2 : 4) * f(x);
-    }
-    return (h/3) * sum;
-  }
-
-  // ---------- Math: Binomial PMF in log-space ----------
-  function logChoose(n, k){
-    // log C(n,k) = sum_{i=1..k} log(n - (k-i)) - log(i)
-    // use k = min(k, n-k) for stability
-    if(k < 0 || k > n) return -Infinity;
-    let kk = k;
-    if(kk > n - kk) kk = n - kk;
-    let s = 0;
-    for(let i=1; i<=kk; i++){
-      s += Math.log(n - (kk - i)) - Math.log(i);
-    }
-    return s;
-  }
-
-  function binomPmf(n, p, k){
-    if(k < 0 || k > n) return 0;
-    // edge cases p=0 or p=1 handled explicitly for exactness / avoid log(0)
-    if(p === 0){
-      return (k === 0) ? 1 : 0;
-    }
-    if(p === 1){
-      return (k === n) ? 1 : 0;
-    }
-    const logP = logChoose(n, k) + k*Math.log(p) + (n-k)*Math.log(1-p);
-    return Math.exp(logP);
-  }
-
-  function binomCdf(n, p, k){
-    const kk = clamp(Math.floor(k), 0, n);
-    // exact sum of pmf from 0..k
-    let s = 0;
-    // If p is exactly 0 or 1, pmf handles it; sum remains exact.
-    for(let j=0; j<=kk; j++){
-      s += binomPmf(n, p, j);
-    }
-    // Numerical rounding could lead to tiny >1
-    return clamp(s, 0, 1);
-  }
-
-  // ---------- Canvas Plot ----------
-  const canvas = document.getElementById("cv");
-  const ctx = canvas.getContext("2d");
-
-  function resizeCanvasToCSS(){
-    // Keep the internal resolution in sync with CSS size for crispness
-    const rect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    const w = Math.max(320, Math.floor(rect.width * dpr));
-    const h = Math.max(320, Math.floor(rect.height * dpr));
-    if(canvas.width !== w || canvas.height !== h){
-      canvas.width = w;
-      canvas.height = h;
-    }
-  }
-
-  function clear(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-  }
-
-  function drawAxes({plotX0, plotY0, plotW, plotH, xMin, xMax, yMin, yMax, xLabel, yLabel, xTicks=6, yTicks=6}){
-    // Background grid
-    ctx.save();
-    ctx.fillStyle = "rgba(0,0,0,0.10)";
-    ctx.fillRect(plotX0, plotY0, plotW, plotH);
-
-    ctx.strokeStyle = "rgba(255,255,255,0.10)";
-    ctx.lineWidth = 1;
-
-    // grid lines
-    for(let i=0; i<=xTicks; i++){
-      const t = i / xTicks;
-      const x = plotX0 + t*plotW;
-      ctx.beginPath();
-      ctx.moveTo(x, plotY0);
-      ctx.lineTo(x, plotY0 + plotH);
-      ctx.stroke();
-    }
-    for(let j=0; j<=yTicks; j++){
-      const t = j / yTicks;
-      const y = plotY0 + (1-t)*plotH;
-      ctx.beginPath();
-      ctx.moveTo(plotX0, y);
-      ctx.lineTo(plotX0 + plotW, y);
-      ctx.stroke();
-    }
-
-    // axes box
-    ctx.strokeStyle = "rgba(255,255,255,0.30)";
-    ctx.lineWidth = 1.2;
-    ctx.strokeRect(plotX0, plotY0, plotW, plotH);
-
-    // ticks + labels
-    ctx.fillStyle = "rgba(232,236,255,0.92)";
-    ctx.font = `${Math.max(11, Math.floor(canvas.height*0.022))}px ${getComputedStyle(document.documentElement).getPropertyValue("--mono").trim() || "monospace"}`;
-    ctx.textBaseline = "middle";
-
-    // x tick labels
-    ctx.textAlign = "center";
-    for(let i=0; i<=xTicks; i++){
-      const t = i / xTicks;
-      const xVal = xMin + t*(xMax - xMin);
-      const x = plotX0 + t*plotW;
-      const y = plotY0 + plotH + 14;
-      ctx.fillText(smartTick(xVal), x, y);
-    }
-
-    // y tick labels
-    ctx.textAlign = "right";
-    for(let j=0; j<=yTicks; j++){
-      const t = j / yTicks;
-      const yVal = yMin + t*(yMax - yMin);
-      const y = plotY0 + (1 - t)*plotH;
-      const x = plotX0 - 8;
-      ctx.fillText(smartTick(yVal), x, y);
-    }
-
-    // axis labels
-    ctx.fillStyle = "rgba(232,236,255,0.95)";
-    ctx.font = `${Math.max(12, Math.floor(canvas.height*0.026))}px ${getComputedStyle(document.documentElement).getPropertyValue("--sans").trim() || "sans-serif"}`;
-    // x label
-    ctx.textAlign = "center";
-    ctx.textBaseline = "alphabetic";
-    ctx.fillText(xLabel, plotX0 + plotW/2, plotY0 + plotH + 42);
-
-    // y label rotated
-    ctx.save();
-    ctx.translate(plotX0 - 52, plotY0 + plotH/2);
-    ctx.rotate(-Math.PI/2);
-    ctx.textAlign = "center";
-    ctx.textBaseline = "alphabetic";
-    ctx.fillText(yLabel, 0, 0);
-    ctx.restore();
-
-    ctx.restore();
-  }
-
-  function smartTick(v){
-    const av = Math.abs(v);
-    if(av === 0) return "0";
-    if(av >= 1000) return v.toFixed(0);
-    if(av >= 100) return v.toFixed(0);
-    if(av >= 10) return v.toFixed(1);
-    if(av >= 1) return v.toFixed(2);
-    return v.toFixed(3);
-  }
-
-  function plotNormal(mu, sigma, a, b){
-    resizeCanvasToCSS();
-    clear();
-
-    const w = canvas.width, h = canvas.height;
-    const padL = 72, padR = 18, padT = 18, padB = 64;
-    const plotX0 = padL, plotY0 = padT, plotW = w - padL - padR, plotH = h - padT - padB;
-
-    // x range mu ± 4*sigma
-    const xMin = mu - 4*sigma;
-    const xMax = mu + 4*sigma;
-
-    // compute curve points (>= 300 points)
-    const N = 500;
-    const xs = new Array(N);
-    const ys = new Array(N);
-    let yMax = 0;
-    for(let i=0; i<N; i++){
-      const t = i/(N-1);
-      const x = xMin + t*(xMax - xMin);
-      const y = normalPdf(x, mu, sigma);
-      xs[i] = x; ys[i] = y;
-      if(y > yMax) yMax = y;
-    }
-    // add a bit of headroom
-    const yMin = 0;
-    const yMaxPlot = yMax * 1.08;
-
-    // Map functions
-    const X = (x) => plotX0 + (x - xMin) / (xMax - xMin) * plotW;
-    const Y = (y) => plotY0 + (1 - (y - yMin) / (yMaxPlot - yMin)) * plotH;
-
-    // axes
-    drawAxes({
-      plotX0, plotY0, plotW, plotH,
-      xMin, xMax, yMin, yMax: yMaxPlot,
-      xLabel: "x",
-      yLabel: "f(x)",
-      xTicks: 6,
-      yTicks: 6
-    });
-
-    // shaded region between a and b (clipped to xMin..xMax)
-    let aa = a, bb = b;
-    if(aa > bb){ const t = aa; aa = bb; bb = t; }
-
-    const shadeL = clamp(aa, xMin, xMax);
-    const shadeR = clamp(bb, xMin, xMax);
-
-    ctx.save();
-    // Shade under curve between shadeL..shadeR
-    if(shadeR > shadeL){
-      ctx.beginPath();
-      // start at left on baseline
-      ctx.moveTo(X(shadeL), Y(0));
-      // follow curve within interval
-      // find index range
-      for(let i=0; i<N; i++){
-        const x = xs[i];
-        if(x < shadeL) continue;
-        if(x > shadeR) break;
-        ctx.lineTo(X(x), Y(ys[i]));
-      }
-      // ensure endpoint at shadeR (linear interpolate)
-      const yAtShadeR = normalPdf(shadeR, mu, sigma);
-      ctx.lineTo(X(shadeR), Y(yAtShadeR));
-      // down to baseline
-      ctx.lineTo(X(shadeR), Y(0));
-      ctx.closePath();
-      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--shade").trim() || "rgba(122,215,255,.25)";
-      ctx.fill();
-    }
-    ctx.restore();
-
-    // curve line
-    ctx.save();
-    ctx.beginPath();
-    for(let i=0; i<N; i++){
-      const x = xs[i], y = ys[i];
-      const px = X(x), py = Y(y);
-      if(i === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
-    }
-    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--curve").trim() || "#7ad7ff";
-    ctx.lineWidth = Math.max(2, w*0.0032);
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
-    ctx.stroke();
-    ctx.restore();
-
-    // draw vertical lines at a and b (within x-range)
-    ctx.save();
-    ctx.strokeStyle = "rgba(255,255,255,0.55)";
-    ctx.setLineDash([6,6]);
-    ctx.lineWidth = 1.5;
-    const drawV = (x, label) => {
-      if(x < xMin || x > xMax) return;
-      const px = X(x);
-      ctx.beginPath();
-      ctx.moveTo(px, plotY0);
-      ctx.lineTo(px, plotY0 + plotH);
-      ctx.stroke();
-
-      ctx.setLineDash([]);
-      ctx.fillStyle = "rgba(232,236,255,0.92)";
-      ctx.font = `${Math.max(11, Math.floor(canvas.height*0.022))}px ${getComputedStyle(document.documentElement).getPropertyValue("--mono").trim() || "monospace"}`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "bottom";
-      ctx.fillText(label, px, plotY0 - 4);
-      ctx.setLineDash([6,6]);
-    };
-    drawV(a, "a");
-    drawV(b, "b");
-    ctx.restore();
-  }
-
-  function plotBinomial(n, p, k){
-    resizeCanvasToCSS();
-    clear();
-
-    const w = canvas.width, h = canvas.height;
-    const padL = 72, padR = 18, padT = 18, padB = 64;
-    const plotX0 = padL, plotY0 = padT, plotW = w - padL - padR, plotH = h - padT - padB;
-
-    // compute pmf for 0..n
-    const pmf = new Array(n+1);
-    let yMax = 0;
-    for(let j=0; j<=n; j++){
-      const v = binomPmf(n, p, j);
-      pmf[j] = v;
-      if(v > yMax) yMax = v;
-    }
-    const yMin = 0;
-    const yMaxPlot = yMax * 1.12 + 1e-12;
-
-    // x range: 0..n
-    const xMin = 0, xMax = n;
-
-    const X = (x) => plotX0 + (x - xMin) / (xMax - xMin || 1) * plotW;
-    const Y = (y) => plotY0 + (1 - (y - yMin) / (yMaxPlot - yMin || 1)) * plotH;
-
-    drawAxes({
-      plotX0, plotY0, plotW, plotH,
-      xMin, xMax, yMin, yMax: yMaxPlot,
-      xLabel: "k",
-      yLabel: "P(X = k)",
-      xTicks: Math.min(10, n),
-      yTicks: 6
-    });
-
-    // draw bars
-    const barGap = 0.12; // fraction gap
-    const cellW = plotW / (n + 1);
-    const barW = cellW * (1 - barGap);
-
-    for(let j=0; j<=n; j++){
-      const cx = X(j);
-      const xLeft = cx - barW/2;
-      const yTop = Y(pmf[j]);
-      const yBase = Y(0);
-
-      const isHi = (j <= k);
-      ctx.fillStyle = isHi
-        ? (getComputedStyle(document.documentElement).getPropertyValue("--barHi").trim() || "#ffd36b")
-        : (getComputedStyle(document.documentElement).getPropertyValue("--bar").trim() || "#9aa7ff");
-      ctx.fillRect(xLeft, yTop, barW, yBase - yTop);
-
-      // subtle outline
-      ctx.strokeStyle = "rgba(255,255,255,0.20)";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(xLeft, yTop, barW, yBase - yTop);
-    }
-
-    // marker line at k
-    ctx.save();
-    ctx.strokeStyle = "rgba(255,255,255,0.55)";
-    ctx.setLineDash([6,6]);
-    ctx.lineWidth = 1.5;
-    const px = X(k);
-    ctx.beginPath();
-    ctx.moveTo(px, plotY0);
-    ctx.lineTo(px, plotY0 + plotH);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = "rgba(232,236,255,0.92)";
-    ctx.font = `${Math.max(11, Math.floor(canvas.height*0.022))}px ${getComputedStyle(document.documentElement).getPropertyValue("--mono").trim() || "monospace"}`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "bottom";
-    ctx.fillText("k", px, plotY0 - 4);
-    ctx.restore();
-  }
-
-  // ---------- DOM Wiring ----------
-  const modeSel = document.getElementById("modeSel");
-  const modePill = document.getElementById("modePill");
-
-  const normalControls = document.getElementById("normalControls");
-  const binomialControls = document.getElementById("binomialControls");
-
-  const muEl = document.getElementById("mu");
-  const sigmaEl = document.getElementById("sigma");
-  const aEl = document.getElementById("a");
-  const bEl = document.getElementById("b");
-
-  const nEl = document.getElementById("n");
-  const pEl = document.getElementById("p");
-  const kEl = document.getElementById("k");
-
-  const plotTitleEl = document.getElementById("plotTitle");
-  const probPill = document.getElementById("probPill");
-  const numbersText = document.getElementById("numbersText");
-  const interpText = document.getElementById("interpText");
-
-  function syncSliderReadouts(){
-    document.getElementById("muVal").textContent = fmt(parseFloat(muEl.value), 1);
-    document.getElementById("sigmaVal").textContent = fmt(parseFloat(sigmaEl.value), 1);
-    document.getElementById("aVal").textContent = fmt(parseFloat(aEl.value), 1);
-    document.getElementById("bVal").textContent = fmt(parseFloat(bEl.value), 1);
-
-    document.getElementById("nVal").textContent = String(parseInt(nEl.value,10));
-    document.getElementById("pVal").textContent = fmt(parseFloat(pEl.value), 2);
-
-    // clamp k to n
-    const n = parseInt(nEl.value,10);
-    let k = parseInt(kEl.value,10);
-    if(k > n){
-      k = n;
-      kEl.value = String(k);
-    }
-    kEl.max = String(n); // ensure slider max matches n
-    document.getElementById("kVal").textContent = String(k);
-  }
-
-  function setMode(mode){
-    if(mode === "normal"){
-      normalControls.classList.remove("hidden");
-      binomialControls.classList.add("hidden");
-      modePill.textContent = "Mode: Normal";
-    } else {
-      normalControls.classList.add("hidden");
-      binomialControls.classList.remove("hidden");
-      modePill.textContent = "Mode: Binomial";
-    }
-  }
-
-  function resetDefaults(){
-    modeSel.value = "normal";
-
-    muEl.value = "0";
-    sigmaEl.value = "1";
-    aEl.value = "-1";
-    bEl.value = "1";
-
-    nEl.value = "20";
-    pEl.value = "0.5";
-    kEl.value = "10";
-
-    setMode("normal");
-    syncSliderReadouts();
-    updateAll(true);
-  }
-
-  function updateAll(silent=false){
-    warn("");
-    syncSliderReadouts();
-
-    const mode = modeSel.value;
-    if(mode === "normal"){
-      const mu = parseFloat(muEl.value);
-      const sigma = parseFloat(sigmaEl.value);
-      let a = parseFloat(aEl.value);
-      let b = parseFloat(bEl.value);
-
-      // integration bounds: allow any order; keep display as typed but interpret correctly
-      const prob = simpsonIntegrate((x) => normalPdf(x, mu, sigma), a, b, 1000); // 500+ steps; using 1000 even
-
-      plotTitleEl.textContent = `Normal Distribution (mu=${fmt(mu,1)}, sigma=${fmt(sigma,1)})`;
-      probPill.textContent = `P = ${fmt6(prob)}`;
-
-      numbersText.innerHTML =
-        `<span class="mono">P(${fmt(a,1)} &le; X &le; ${fmt(b,1)}) = ${fmt6(prob)}</span><br>` +
-        `Parameters: <span class="mono">mu=${fmt(mu,1)}</span>, <span class="mono">sigma=${fmt(sigma,1)}</span>, ` +
-        `<span class="mono">a=${fmt(a,1)}</span>, <span class="mono">b=${fmt(b,1)}</span>.`;
-
-      interpText.textContent =
-        `The shaded area represents the probability that X falls between ${fmt(a,1)} and ${fmt(b,1)} under a Normal distribution with mean ${fmt(mu,1)} and standard deviation ${fmt(sigma,1)}.`;
-
-      plotNormal(mu, sigma, a, b);
-
-      if(!silent) setStatus("Updated (Normal)");
-    } else {
-      let n = parseInt(nEl.value,10);
-      let p = parseFloat(pEl.value);
-      let k = parseInt(kEl.value,10);
-
-      // clamp k to n
-      if(k > n){
-        k = n;
-        kEl.value = String(k);
-        syncSliderReadouts();
-      }
-
-      // compute exact CDF by summation
-      const prob = binomCdf(n, p, k);
-
-      plotTitleEl.textContent = `Binomial Distribution (n=${n}, p=${fmt(p,2)})`;
-      probPill.textContent = `P = ${fmt6(prob)}`;
-
-      numbersText.innerHTML =
-        `<span class="mono">P(X &le; ${k}) = ${fmt6(prob)}</span><br>` +
-        `Parameters: <span class="mono">n=${n}</span>, <span class="mono">p=${fmt(p,2)}</span>, <span class="mono">k=${k}</span>.`;
-
-      interpText.textContent =
-        `The highlighted bars represent P(X <= ${k}) = ${fmt6(prob)}, the probability of ${k} or fewer successes in ${n} trials with success probability ${fmt(p,2)}.`;
-
-      plotBinomial(n, p, k);
-
-      if(!silent) setStatus("Updated (Binomial)");
-    }
-  }
-
-  // ---------- Event listeners ----------
-  window.addEventListener("resize", () => updateAll(true));
-
-  modeSel.addEventListener("change", () => {
-    setMode(modeSel.value);
-    syncSliderReadouts();
-    updateAll(true); // redraw immediately on mode change
-  });
-
-  // Live updates on slider input (immediate redraw)
-  const liveEls = [muEl, sigmaEl, aEl, bEl, nEl, pEl, kEl];
-  for(const el of liveEls){
-    el.addEventListener("input", () => {
-      // If changing n, clamp k max immediately
-      if(el === nEl){
-        syncSliderReadouts();
-      } else if(el === kEl){
-        syncSliderReadouts();
-      } else {
-        syncSliderReadouts();
-      }
-      updateAll(true); // redraw immediately
-    });
-  }
-
-  document.getElementById("updateBtn").addEventListener("click", () => updateAll(false));
-  document.getElementById("resetBtn").addEventListener("click", () => {
-    resetDefaults();
-    setStatus("Reset to defaults");
-  });
-
-  // Initialize
-  setMode("normal");
-  syncSliderReadouts();
-  updateAll(true);
-})();
-</script>
+          <div class="photo-label"><strong>UO Human Biomechanics Lab</strong><span>Research environment</span></div>
+        </figure>
+      </div>
+
+      </div><!-- end .photo-columns -->
+
+      <!-- bottom node strip -->
+      <div class="node-strip">
+        <button class="signal-node" type="button">
+          <strong>tPBM</strong><span>Neuroscience</span>
+        </button>
+        <button class="signal-node" type="button">
+          <strong>Ufology</strong><span>Hidden Signals</span>
+        </button>
+        <button class="signal-node" type="button">
+          <strong>Painting</strong><span>PNCA / Arts</span>
+        </button>
+        <button class="signal-node" type="button">
+          <strong>Alchemy</strong><span>Method + Symbol</span>
+        </button>
+        <button class="signal-node" type="button">
+          <strong>Biofeedback</strong><span>Embodied Data</span>
+        </button>
+        <button class="signal-node" type="button">
+          <strong>Outreach</strong><span>Science Communication</span>
+        </button>
+        <button class="signal-node" type="button">
+          <strong>Cities</strong><span>For Humans</span>
+        </button>
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      document.querySelectorAll(".media-frame").forEach(function (frame) {
+        const img = frame.querySelector("img");
+        if (!img) return;
+        function sync() {
+          frame.classList.toggle("missing", !(img.complete && img.naturalWidth > 0));
+        }
+        sync();
+        img.addEventListener("load", sync);
+        img.addEventListener("error", sync);
+      });
+    }());
+  </script>
 </body>
 </html>
+
